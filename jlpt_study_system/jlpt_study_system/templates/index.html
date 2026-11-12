@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JLPT N3 SPRINT // STUDY SYSTEM</title>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand-block">
+                <div class="brand-badge">[SYSTEM]</div>
+                <h1 class="brand-title">JLPT N3 SPRINT</h1>
+                <div class="brand-subtitle">EXECUTIVE STUDY SUITE</div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="dashboard">
+                    <span class="nav-code">[01]</span>
+                    <span class="nav-label">READINESS DASHBOARD</span>
+                </button>
+                <button class="nav-item" data-tab="curriculum">
+                    <span class="nav-code">[02]</span>
+                    <span class="nav-label">7-DAY SPRINT & POMODORO</span>
+                </button>
+                <button class="nav-item" data-tab="flashcards">
+                    <span class="nav-code">[03]</span>
+                    <span class="nav-label">FSRS FLASHCARDS</span>
+                </button>
+                <button class="nav-item" data-tab="drills">
+                    <span class="nav-code">[04]</span>
+                    <span class="nav-label">INTERACTIVE DRILLS</span>
+                </button>
+                <button class="nav-item" data-tab="errors">
+                    <span class="nav-code">[05]</span>
+                    <span class="nav-label">ERROR NOTEBOOK</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text">SQLite WAL Connected</span>
+                </div>
+                <div class="footer-meta">Cutoff: 19/60 | Pass: 95/180</div>
+            </div>
+        </aside>
+
+        <!-- Main Content Pane -->
+        <main class="main-content">
+            <!-- Topbar Header -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <span class="breadcrumb-module" id="current-module-title">READINESS DASHBOARD</span>
+                </div>
+                <div class="topbar-right">
+                    <button class="btn btn-secondary btn-sm" id="btn-seed-data">RE-INDEX ASSETS</button>
+                    <span class="system-time" id="system-time">--:--:-- UTC</span>
+                </div>
+            </header>
+
+            <!-- Container for Tabs -->
+            <div class="content-body">
+                <!-- TAB 1: READINESS DASHBOARD -->
+                <section class="tab-pane active" id="pane-dashboard">
+                    <!-- Cutoff & Pass Projections Bar -->
+                    <div class="card card-hero">
+                        <div class="hero-header">
+                            <div>
+                                <span class="tag tag-accent">REAL-TIME PROJECTION</span>
+                                <h2 class="hero-title" id="hero-pass-status">EVALUATING STATUS...</h2>
+                            </div>
+                            <div class="hero-score-box">
+                                <span class="score-number" id="hero-total-score">--</span>
+                                <span class="score-denom">/ 180</span>
+                            </div>
+                        </div>
+
+                        <!-- 3 Section Cutoff Gauges -->
+                        <div class="gauges-grid">
+                            <div class="gauge-card" id="gauge-gengo">
+                                <div class="gauge-label-row">
+                                    <span class="section-badge">[GENGO]</span>
+                                    <span class="section-title">Language Knowledge</span>
+                                </div>
+                                <div class="gauge-score-row">
+                                    <span class="gauge-score" id="score-gengo">--</span>
+                                    <span class="gauge-denom">/ 60 (Cutoff: 19)</span>
+                                </div>
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill" id="bar-gengo" style="width: 0%;"></div>
+                                    <div class="cutoff-line" style="left: 31.6%;" title="Cutoff 19/60"></div>
+                                </div>
+                                <div class="gauge-status" id="status-gengo">Evaluating...</div>
+                            </div>
+
+                            <div class="gauge-card" id="gauge-reading">
+                                <div class="gauge-label-row">
+                                    <span class="section-badge">[DOKKAI]</span>
+                                    <span class="section-title">Reading Decoder</span>
+                                </div>
+                                <div class="gauge-score-row">
+                                    <span class="gauge-score" id="score-reading">--</span>
+                                    <span class="gauge-denom">/ 60 (Cutoff: 19)</span>
+                                </div>
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill" id="bar-reading" style="width: 0%;"></div>
+                                    <div class="cutoff-line" style="left: 31.6%;" title="Cutoff 19/60"></div>
+                                </div>
+                                <div class="gauge-status" id="status-reading">Evaluating...</div>
+                            </div>
+
+                            <div class="gauge-card" id="gauge-listening">
+                                <div class="gauge-label-row">
+                                    <span class="section-badge">[CHOUKAI]</span>
+                                    <span class="section-title">Listening Survival</span>
+                                </div>
+                                <div class="gauge-score-row">
+                                    <span class="gauge-score" id="score-listening">--</span>
+                                    <span class="gauge-denom">/ 60 (Cutoff: 19)</span>
+                                </div>
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill" id="bar-listening" style="width: 0%;"></div>
+                                    <div class="cutoff-line" style="left: 31.6%;" title="Cutoff 19/60"></div>
+                                </div>
+                                <div class="gauge-status" id="status-listening">Evaluating...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Critical Triage Recommendations -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <span class="card-tag">[TRIAGE]</span>
+                            <h3 class="card-title">PARETO 80/20 STRATEGIC RECOMMENDATIONS</h3>
+                        </div>
+                        <div class="card-body" id="recommendations-container">
+                            <p class="text-muted">Loading recommendations...</p>
+                        </div>
+                    </div>
+
+                    <!-- Deck & Drill Summary Quick Stats -->
+                    <div class="grid-2 mt-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-tag">[FSRS]</span>
+                                <h3 class="card-title">MEMORY STABILITY OVERVIEW</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="stat-row">
+                                    <span class="stat-label">Total Seeded Cards:</span>
+                                    <span class="stat-val" id="stat-total-cards">--</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Reviewed Cards:</span>
+                                    <span class="stat-val" id="stat-reviewed-cards">--</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Retention Rate:</span>
+                                    <span class="stat-val" id="stat-retention-rate">--%</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Total Reviews Logged:</span>
+                                    <span class="stat-val" id="stat-total-reviews">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-tag">[ERRORS]</span>
+                                <h3 class="card-title">ERROR NOTEBOOK STATUS</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="stat-row">
+                                    <span class="stat-label">Active Unresolved Traps:</span>
+                                    <span class="stat-val text-warn" id="stat-unresolved-errors">--</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Successfully Remediated:</span>
+                                    <span class="stat-val text-success" id="stat-remediated-errors">--</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Remediation Rate:</span>
+                                    <span class="stat-val" id="stat-remediation-rate">--%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 2: 7-DAY CURRICULUM & POMODORO -->
+                <section class="tab-pane" id="pane-curriculum">
+                    <div class="grid-layout-sidebar">
+                        <div class="curriculum-main">
+                            <!-- Day Selector Buttons -->
+                            <div class="day-pills" id="day-pills">
+                                <button class="btn-day active" data-day="1">DAY 1</button>
+                                <button class="btn-day" data-day="2">DAY 2</button>
+                                <button class="btn-day" data-day="3">DAY 3</button>
+                                <button class="btn-day" data-day="4">DAY 4</button>
+                                <button class="btn-day" data-day="5">DAY 5</button>
+                                <button class="btn-day" data-day="6">DAY 6</button>
+                                <button class="btn-day" data-day="7">DAY 7</button>
+                            </div>
+
+                            <!-- Day Header Details -->
+                            <div class="card mt-3">
+                                <div class="card-header flex-between">
+                                    <div>
+                                        <span class="card-tag" id="curriculum-day-tag">[DAY 1]</span>
+                                        <h3 class="card-title" id="curriculum-day-title">TACTICAL SPRINT BLOCK</h3>
+                                    </div>
+                                    <div class="progress-pill" id="curriculum-day-pct">0% Complete</div>
+                                </div>
+                                <div class="card-body" id="curriculum-blocks-list">
+                                    <!-- Dynamic Blocks Rendered Here -->
+                                </div>
+                            </div>
+
+                            <!-- Adaptive Advice Banner -->
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <span class="card-tag">[ADAPTIVE ADVICE]</span>
+                                    <h4 class="card-title">DYNAMIC SCHEDULE REBALANCING</h4>
+                                </div>
+                                <div class="card-body" id="curriculum-adaptive-advice">
+                                    <p class="text-muted">Loading adaptive advice...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pomodoro 50/10 Focus Terminal -->
+                        <aside class="pomodoro-widget card">
+                            <div class="card-header">
+                                <span class="card-tag">[POMODORO]</span>
+                                <h3 class="card-title">50-10 FOCUS ENGINE</h3>
+                            </div>
+                            <div class="pomodoro-display">
+                                <div class="pomodoro-mode" id="pomo-mode">DEEP WORK (50 MIN)</div>
+                                <div class="pomodoro-timer" id="pomo-timer">50:00</div>
+                                <div class="pomodoro-target" id="pomo-target">Today: 0 / 12 Blocks Completed</div>
+                            </div>
+                            <div class="pomodoro-controls">
+                                <button class="btn btn-primary btn-block" id="btn-pomo-toggle">START SPRINT BLOCK</button>
+                                <button class="btn btn-secondary btn-block mt-2" id="btn-pomo-reset">RESET TIMER</button>
+                            </div>
+                            <div class="pomodoro-notes mt-3">
+                                <label class="label-xs">ACTIVE TASK LABEL</label>
+                                <input type="text" class="input-text" id="pomo-task-input" value="Ngữ pháp Tier 1 & Discourse Drills">
+                            </div>
+                        </aside>
+                    </div>
+                </section>
+
+                <!-- TAB 3: FSRS FLASHCARDS -->
+                <section class="tab-pane" id="pane-flashcards">
+                    <div class="flashcard-container">
+                        <div class="flashcard-toolbar flex-between">
+                            <div class="filter-group">
+                                <span class="label-xs">FILTER DECK:</span>
+                                <button class="btn-filter active" data-cat="all">ALL (80)</button>
+                                <button class="btn-filter" data-cat="grammar">GRAMMAR (40)</button>
+                                <button class="btn-filter" data-cat="vocab">VOCAB & DISCOURSE (40)</button>
+                            </div>
+                            <div class="due-badge" id="cards-due-count">Due: -- cards</div>
+                        </div>
+
+                        <!-- Card Object -->
+                        <div class="flashcard-viewport mt-3">
+                            <div class="flashcard-box" id="flashcard-box">
+                                <div class="card-category-indicator" id="card-cat-badge">[GRAMMAR]</div>
+                                
+                                <div class="card-front-content">
+                                    <div class="front-prompt" id="card-front-text">Loading deck...</div>
+                                    <div class="text-hint mt-2">[Press SPACE or click to flip]</div>
+                                </div>
+
+                                <div class="card-back-content hidden" id="card-back-wrapper">
+                                    <hr class="separator">
+                                    <div class="back-meaning" id="card-back-text"></div>
+                                    
+                                    <div class="trap-box mt-3" id="card-trap-box">
+                                        <div class="trap-tag">[BẪY TRẮC NGHIỆM]</div>
+                                        <div class="trap-text" id="card-trap-text"></div>
+                                    </div>
+
+                                    <div class="example-box mt-3" id="card-example-box">
+                                        <div class="example-tag">[VÍ DỤ THỰC TẾ]</div>
+                                        <div class="example-text" id="card-example-text"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4 Recall Action Buttons -->
+                        <div class="flashcard-actions mt-3">
+                            <button class="btn-rating btn-again" data-rating="1">
+                                <span class="rating-key">[1]</span>
+                                <span class="rating-title">AGAIN</span>
+                                <span class="rating-sub">10m / Lapse</span>
+                            </button>
+                            <button class="btn-rating btn-hard" data-rating="2">
+                                <span class="rating-key">[2]</span>
+                                <span class="rating-title">HARD</span>
+                                <span class="rating-sub">1 day</span>
+                            </button>
+                            <button class="btn-rating btn-good" data-rating="3">
+                                <span class="rating-key">[3]</span>
+                                <span class="rating-title">GOOD</span>
+                                <span class="rating-sub">2 days</span>
+                            </button>
+                            <button class="btn-rating btn-easy" data-rating="4">
+                                <span class="rating-key">[4]</span>
+                                <span class="rating-title">EASY</span>
+                                <span class="rating-sub">4-5 days</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 4: INTERACTIVE DRILLS -->
+                <section class="tab-pane" id="pane-drills">
+                    <div class="drills-header flex-between">
+                        <div class="drill-mode-selector">
+                            <button class="btn-drill-mode active" data-drill="choukai">
+                                <span class="code">[CHOUKAI]</span> MONDAI 5 SPEED REFLEX (3 SEC)
+                            </button>
+                            <button class="btn-drill-mode" data-drill="dokkai">
+                                <span class="code">[DOKKAI]</span> 4-STEP READING DECODER
+                            </button>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" id="btn-reload-drill">NEW DRILL SET</button>
+                    </div>
+
+                    <!-- Active Drill Workspace -->
+                    <div class="card mt-3" id="drill-workspace">
+                        <div class="card-header flex-between">
+                            <div>
+                                <span class="card-tag" id="drill-section-tag">[CHOUKAI REFLEX]</span>
+                                <h3 class="card-title" id="drill-prompt-context">Tình huống phản xạ</h3>
+                            </div>
+                            <div class="drill-timer-box" id="drill-timer-box">
+                                <span class="label-xs">RESPONSE TIME</span>
+                                <span class="drill-timer" id="drill-stopwatch">0.0s</span>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="drill-prompt-box">
+                                <div class="drill-prompt-text" id="drill-prompt-text">Đang tải câu hỏi phản xạ...</div>
+                            </div>
+
+                            <div class="drill-options-grid mt-4" id="drill-options-container">
+                                <!-- Rendered dynamically -->
+                            </div>
+
+                            <div class="drill-feedback-box hidden mt-4" id="drill-feedback-box">
+                                <div class="feedback-status" id="drill-feedback-title"></div>
+                                <div class="feedback-trap mt-2" id="drill-feedback-trap"></div>
+                                <button class="btn btn-primary mt-3" id="btn-next-drill-question">TIẾP TỤC CÂU KẾ TIẾP</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 5: ERROR NOTEBOOK -->
+                <section class="tab-pane" id="pane-errors">
+                    <div class="card">
+                        <div class="card-header flex-between">
+                            <div>
+                                <span class="card-tag">[ERROR LOG]</span>
+                                <h3 class="card-title">SỔ TAY BẪY TRẮC NGHIỆM & ĐIỂM YẾU TỒN ĐỌNG</h3>
+                            </div>
+                            <div class="filter-group">
+                                <button class="btn-error-filter active" data-filter="unresolved">CHƯA KHẮC PHỤC</button>
+                                <button class="btn-error-filter" data-filter="all">TẤT CẢ</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>LOẠI MỤC</th>
+                                            <th>CÂU HỎI / MẪU BẪY</th>
+                                            <th>ĐÁP ÁN ĐÚNG</th>
+                                            <th>GIẢI MÃ BẪY (TRAP ANALYSIS)</th>
+                                            <th>SỐ LẦN SAI</th>
+                                            <th>THAO TÁC</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="error-notebook-tbody">
+                                        <tr><td colspan="6" class="text-center text-muted">Đang tải sổ tay bẫy...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
