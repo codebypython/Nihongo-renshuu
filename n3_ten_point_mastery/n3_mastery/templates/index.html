@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light" data-focus-mode="off" data-font-scale="md" data-hide-ruby="0">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JLPT N3 10/10 Mastery — Hệ thống Luyện thi Chống Học Vẹt</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231D4ED8'/%3E%3Ctext x='16' y='21' font-family='sans-serif' font-size='14' font-weight='700' text-anchor='middle' fill='%23FFFFFF'%3EN3%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Chuyển tới nội dung chính</a>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-group">
+        <span class="brand-badge" aria-hidden="true">N3</span>
+        <div class="brand-titles">
+          <h1 class="brand-title">JLPT N3 10/10 Mastery</h1>
+          <p class="brand-subtitle">Ôn thi Cuối kì &amp; JLPT</p>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Điều hướng chính">
+        <button type="button" class="nav-btn active" data-view="dashboard" aria-current="page">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+          </svg>
+          <span>Trang chủ</span>
+        </button>
+        <button type="button" class="nav-btn" data-view="grammar">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M12 6.5c-1.8-1.3-4.2-1.8-7-1.5v13c2.8-.3 5.2.2 7 1.5 1.8-1.3 4.2-1.8 7-1.5V5c-2.8-.3-5.2.2-7 1.5z"></path>
+            <path d="M12 6.5v13"></path>
+          </svg>
+          <span>Ngữ pháp &amp; Từ vựng</span>
+        </button>
+        <button type="button" class="nav-btn" data-view="study">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          <span>Làm câu hỏi</span>
+        </button>
+        <button type="button" class="nav-btn" data-view="exam">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <circle cx="12" cy="13" r="8"></circle>
+            <path d="M12 9v4l2.5 2.5"></path>
+            <path d="M9 2h6"></path>
+          </svg>
+          <span>Thi thử</span>
+        </button>
+        <button type="button" class="nav-btn" data-view="notebook">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <path d="M14 2v6h6"></path>
+            <path d="M16 13H8"></path>
+            <path d="M16 17H8"></path>
+          </svg>
+          <span>Câu sai &amp; Nạp đề</span>
+          <span id="nav-error-badge" class="pill-count tabular-nums" hidden>0</span>
+        </button>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" id="btn-focus-mode" class="btn-secondary btn-sm" aria-pressed="false" aria-label="Bật hoặc tắt Chế độ Tập trung (Phím F)">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+          </svg>
+          <span id="focus-mode-label">Tập trung</span>
+        </button>
+        <button type="button" id="btn-display-prefs" class="btn-secondary btn-sm" aria-haspopup="dialog" aria-label="Tùy chỉnh ẩn hiện thành phần và cỡ chữ đọc (Phím V)">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <line x1="4" y1="6" x2="20" y2="6"></line>
+            <line x1="4" y1="12" x2="20" y2="12"></line>
+            <line x1="4" y1="18" x2="20" y2="18"></line>
+            <circle cx="9" cy="6" r="2"></circle>
+            <circle cx="15" cy="12" r="2"></circle>
+            <circle cx="8" cy="18" r="2"></circle>
+          </svg>
+          <span>Ẩn/Hiện</span>
+        </button>
+        <button type="button" id="btn-help-modal" class="btn-secondary btn-sm" aria-label="Mở hướng dẫn sử dụng và phím tắt">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M9.5 9.5a2.5 2.5 0 0 1 5 .5c0 1.5-2.5 2-2.5 3.5"></path>
+            <circle cx="12" cy="17" r="0.5" fill="currentColor"></circle>
+          </svg>
+          <span>Hướng dẫn</span>
+        </button>
+        <button type="button" id="btn-theme-toggle" class="btn-secondary btn-sm" aria-label="Đổi giao diện Sáng / Tối (Phím T)">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+          </svg>
+          <span id="theme-toggle-label">Giao diện Tối</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div id="focus-topbar" class="focus-topbar" role="region" aria-label="Thanh điều khiển Chế độ Tập trung" hidden>
+    <div class="focus-topbar-inner">
+      <div class="focus-context-group">
+        <span class="badge accent">[TẬP TRUNG]</span>
+        <span id="focus-context-label" class="focus-context-label">Đang tập trung học &amp; làm bài</span>
+        <div class="focus-quick-nav" aria-label="Chuyển nhanh màn hình">
+          <button type="button" class="btn-ghost btn-sm" data-focus-view="grammar">Ngữ pháp</button>
+          <button type="button" class="btn-ghost btn-sm" data-focus-view="study">Làm câu hỏi</button>
+          <button type="button" class="btn-ghost btn-sm" data-focus-view="exam">Thi thử</button>
+          <button type="button" class="btn-ghost btn-sm" data-focus-view="dashboard">Trang chủ</button>
+        </div>
+      </div>
+      <div class="focus-actions-group">
+        <div class="font-scale-group" role="group" aria-label="Cỡ chữ đọc">
+          <button type="button" class="scale-btn" data-font-scale="sm" aria-pressed="false" aria-label="Cỡ chữ nhỏ">A-</button>
+          <button type="button" class="scale-btn active" data-font-scale="md" aria-pressed="true" aria-label="Cỡ chữ vừa">A</button>
+          <button type="button" class="scale-btn" data-font-scale="lg" aria-pressed="false" aria-label="Cỡ chữ lớn">A+</button>
+          <button type="button" class="scale-btn" data-font-scale="xl" aria-pressed="false" aria-label="Cỡ chữ rất lớn">A++</button>
+        </div>
+        <button type="button" id="btn-focus-prefs" class="btn-secondary btn-sm">Ẩn/Hiện mục</button>
+        <button type="button" id="btn-focus-theme" class="btn-secondary btn-sm">Sáng/Tối</button>
+        <button type="button" id="btn-exit-focus" class="btn-primary btn-sm">Thoát Tập trung (F)</button>
+      </div>
+    </div>
+  </div>
+
+  <main id="main-content" class="app-main" tabindex="-1">
+    <section id="view-dashboard" class="view-section active" aria-labelledby="dash-heading">
+      <div id="dashboard-root"></div>
+    </section>
+
+    <section id="view-study" class="view-section" hidden aria-labelledby="study-heading">
+      <div id="study-root"></div>
+    </section>
+
+    <section id="view-exam" class="view-section" hidden aria-labelledby="exam-heading">
+      <div id="exam-root"></div>
+    </section>
+
+    <section id="view-notebook" class="view-section" hidden aria-labelledby="notebook-heading">
+      <div id="notebook-root"></div>
+    </section>
+
+    <section id="view-grammar" class="view-section" hidden aria-labelledby="grammar-heading">
+      <div id="grammar-root"></div>
+    </section>
+  </main>
+
+  <div id="help-modal-backdrop" class="modal-backdrop" hidden>
+    <div id="help-modal" class="modal-dialog modal-dialog-lg" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+      <div class="modal-header">
+        <h2 id="help-modal-title">Hướng dẫn sử dụng &amp; Phím tắt</h2>
+        <button type="button" id="btn-close-help" class="icon-btn" aria-label="Đóng hộp thoại">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M18 6L6 18M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body modal-scroll-body stack-md">
+        <div class="grammar-dim-box stack-sm">
+          <h3 class="card-title" style="margin-bottom:0;">1. Lộ trình học mỗi ngày (4 bước)</h3>
+          <ol class="stack-sm" style="margin:0; padding-left: 20px;">
+            <li>Mở <strong>Ngữ pháp &amp; Từ vựng</strong> để xem công thức chia thể, nghĩa cốt lõi và làm bài tập ngắn.</li>
+            <li>Mở <strong>Làm câu hỏi</strong>, chọn một chủ đề (nên bấm <strong>Ôn nền N4</strong> trước khi vào câu N3).</li>
+            <li>Sau khi nộp từng câu, đọc phần dịch, <strong>Giải phẫu Ngữ pháp</strong> và bấm vào thẻ mẫu để xem lại bài học.</li>
+            <li>Vào <strong>Câu sai &amp; Nạp đề</strong> để làm lại câu hay sai, sau đó thử sức ở mục <strong>Thi thử</strong>.</li>
+          </ol>
+        </div>
+
+        <div class="grammar-dim-box stack-sm">
+          <h3 class="card-title" style="margin-bottom:0;">2. Giải thích nhanh các khái niệm trên màn hình</h3>
+          <p style="margin:0;"><strong>Điểm Làm Đề Gốc vs Điểm Hiểu Thật:</strong> Điểm Đề Gốc chỉ đo số câu bạn nhớ đúng trên đề nguyên bản. Điểm Hiểu Thật khắt khe hơn: chỉ công nhận khi bạn làm đúng cả <strong>câu hỏi đổi dạng</strong> (tránh nhớ vẹt vị trí A/B/C/D) và trả lời đúng qua ít nhất <strong>2 lần ôn cách quãng</strong>.</p>
+          <p style="margin:0;"><strong>3 Mức Hỗ trợ Phiên âm:</strong> Mức 1 hiện phiên âm Hiragana + Hán-Việt cho từ xung quanh (vẫn che từ đang hỏi); Mức 2 ẩn phiên âm phụ và cho mở 1 gợi ý bằng phím <kbd>H</kbd>; Mức 3 khóa hết gợi ý như thi thật.</p>
+        </div>
+
+        <div class="grammar-dim-box stack-sm">
+          <h3 class="card-title" style="margin-bottom:0;">3. Phím tắt thao tác nhanh</h3>
+          <ul class="shortcut-list" style="margin-bottom:0;">
+            <li><kbd>1</kbd> – <kbd>4</kbd> <span>Chọn nhanh đáp án trắc nghiệm 1–4</span></li>
+            <li><kbd>Space</kbd> <span>Nộp đáp án hoặc chuyển sang câu tiếp theo</span></li>
+            <li><kbd>H</kbd> <span>Xem 1 gợi ý ngữ cảnh (khi ở Hỗ trợ Mức 2)</span></li>
+            <li><kbd>T</kbd> <span>Đổi nhanh Giao diện Sáng / Giao diện Tối</span></li>
+            <li><kbd>F</kbd> <span>Bật / Tắt Chế độ Tập trung</span></li>
+            <li><kbd>V</kbd> <span>Mở bảng Ẩn/Hiện từng thành phần &amp; cỡ chữ</span></li>
+            <li><kbd>[</kbd> / <kbd>]</kbd> <span>Chuyển bài trước / tiếp ở chế độ đọc từng bài hoặc thi từng câu</span></li>
+            <li><kbd>Esc</kbd> <span>Đóng hộp thoại đang mở hoặc thoát Chế độ Tập trung</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btn-ok-help" class="btn-primary">Đã hiểu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="grammar-modal-backdrop" class="modal-backdrop" hidden>
+    <div id="grammar-modal" class="modal-dialog modal-dialog-lg" role="dialog" aria-modal="true" aria-labelledby="grammar-modal-title">
+      <div class="modal-header">
+        <h2 id="grammar-modal-title">Bài học Ngữ pháp Chi tiết</h2>
+        <button type="button" id="btn-close-grammar-modal" class="icon-btn" aria-label="Đóng bài học ngữ pháp">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M18 6L6 18M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div id="grammar-modal-body" class="modal-body modal-scroll-body"></div>
+      <div class="modal-footer">
+        <button type="button" id="btn-ok-grammar-modal" class="btn-secondary">Đóng (Esc)</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="display-prefs-backdrop" class="modal-backdrop" hidden>
+    <div id="display-prefs-modal" class="modal-dialog modal-dialog-lg" role="dialog" aria-modal="true" aria-labelledby="display-prefs-title">
+      <div class="modal-header">
+        <h2 id="display-prefs-title">Tùy chỉnh Ẩn/Hiện Thành phần &amp; Chế độ Đọc</h2>
+        <button type="button" id="btn-close-display-prefs" class="icon-btn" aria-label="Đóng bảng tùy chỉnh hiển thị">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M18 6L6 18M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div id="display-prefs-body" class="modal-body modal-scroll-body stack-md"></div>
+      <div class="modal-footer">
+        <button type="button" id="btn-reset-display-prefs" class="btn-secondary">Khôi phục mặc định</button>
+        <button type="button" id="btn-ok-display-prefs" class="btn-primary">Xong</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-region" class="toast-region" aria-live="polite"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
