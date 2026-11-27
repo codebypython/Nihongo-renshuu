@@ -1,0 +1,19 @@
+﻿LANGUAGE LAB — JLPT N3
+Bản chạy trực tiếp cho Windows 10/11 64-bit (Intel/AMD)
+
+1. Nhấp phải tệp ZIP, chọn “Extract All…” hoặc “Giải nén tất cả”.
+2. Mở thư mục “Language Lab - JLPT N3” đã giải nén.
+3. Nhấp đúp “Mo N3 Mastery.cmd” để luyện theo bộ đề và lộ trình 10/10,
+   hoặc “Mo JLPT Sprint 7 ngay.cmd” để học thẻ và theo lộ trình 7 ngày.
+4. Trình duyệt mặc định sẽ tự mở. Bạn cũng có thể mở địa chỉ http://127.0.0.1:…
+   hiển thị trong cửa sổ ứng dụng.
+
+Gói có sẵn Python, thư viện và học liệu để dùng ngoại tuyến.
+Giữ cửa sổ ứng dụng mở trong khi học. Khi học xong, nhấn Ctrl+C để dừng.
+
+Bản phát hành công khai có dữ liệu học khởi tạo sẵn cho người học mới.
+Tiến độ mới lưu trong thư mục đã giải nén. Để sao lưu hoặc chuyển máy, hãy
+dừng cả hai ứng dụng rồi chép nguyên thư mục “Language Lab - JLPT N3”.
+
+Bộ đề Excel nằm trong he-thong\exam_downloads.
+Tài liệu Sprint và thẻ CSV cho Anki nằm trong he-thong\jlpt_n3_sprint.
