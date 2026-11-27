@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JLPT N3 10/10 Mastery — Hệ thống Luyện thi Chống Học Vẹt</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231D4ED8'/%3E%3Ctext x='16' y='21' font-family='sans-serif' font-size='14' font-weight='700' text-anchor='middle' fill='%23FFFFFF'%3EN3%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Chuyển tới nội dung chính</a>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-group">
+        <span class="brand-badge" aria-hidden="true">N3</span>
+        <div class="brand-titles">
+          <h1 class="brand-title">JLPT N3 10/10 Mastery</h1>
+          <p class="brand-subtitle">Bắc cầu N4&#8594;N3 · Chống học vẹt 4 chế độ · Giàn giáo 3 cấp</p>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Điều hướng chính">
+        <button type="button" class="nav-btn active" data-view="dashboard" aria-current="page">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+          </svg>
+          <span>Tổng quan</span>
+        </button>
+        <button type="button" class="nav-btn" data-view="study">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          <span>Luyện tập</span>
+        </button>
+        <button type="button" class="nav-btn" data-view="exam">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <circle cx="12" cy="13" r="8"></circle>
+            <path d="M12 9v4l2.5 2.5"></path>
+            <path d="M9 2h6"></path>
+          </svg>
+          <span>Phòng thi</span>
+        </button>
+        <button type="button" class="nav-btn" data-view="notebook">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <path d="M14 2v6h6"></path>
+            <path d="M16 13H8"></path>
+            <path d="M16 17H8"></path>
+          </svg>
+          <span>Sổ tay &amp; Excel</span>
+          <span id="nav-error-badge" class="pill-count tabular-nums" hidden>0</span>
+        </button>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" id="btn-help-modal" class="icon-btn" aria-label="Mở bảng phím tắt và quy tắc">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M9.5 9.5a2.5 2.5 0 0 1 5 .5c0 1.5-2.5 2-2.5 3.5"></path>
+            <circle cx="12" cy="17" r="0.5" fill="currentColor"></circle>
+          </svg>
+        </button>
+        <button type="button" id="btn-theme-toggle" class="btn-secondary btn-sm" aria-label="Chuyển giao diện Sáng / Tối (Phím T)">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+          </svg>
+          <span id="theme-toggle-label">Nordic Dark</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content" class="app-main" tabindex="-1">
+    <section id="view-dashboard" class="view-section active" aria-labelledby="dash-heading">
+      <div id="dashboard-root"></div>
+    </section>
+
+    <section id="view-study" class="view-section" hidden aria-labelledby="study-heading">
+      <div id="study-root"></div>
+    </section>
+
+    <section id="view-exam" class="view-section" hidden aria-labelledby="exam-heading">
+      <div id="exam-root"></div>
+    </section>
+
+    <section id="view-notebook" class="view-section" hidden aria-labelledby="notebook-heading">
+      <div id="notebook-root"></div>
+    </section>
+  </main>
+
+  <div id="help-modal-backdrop" class="modal-backdrop" hidden>
+    <div id="help-modal" class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+      <div class="modal-header">
+        <h2 id="help-modal-title">Phím tắt &amp; Quy chuẩn 10/10</h2>
+        <button type="button" id="btn-close-help" class="icon-btn" aria-label="Đóng hộp thoại">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M18 6L6 18M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <ul class="shortcut-list">
+          <li><kbd>1</kbd> – <kbd>4</kbd> <span>Chọn nhanh đáp án trắc nghiệm 1–4</span></li>
+          <li><kbd>Space</kbd> <span>Nộp đáp án hoặc chuyển sang câu kế tiếp</span></li>
+          <li><kbd>H</kbd> <span>Mở tối đa 1 gợi ý ngữ cảnh (Giàn giáo Cấp 2)</span></li>
+          <li><kbd>T</kbd> <span>Chuyển tức thì Academic Editorial Light / Nordic Frost Dark</span></li>
+          <li><kbd>Esc</kbd> <span>Đóng hộp thoại hiện tại</span></li>
+        </ul>
+        <div class="callout-info">
+          <strong>Cổng Chứng nhận [MASTERED 10/10]:</strong> Chỉ công nhận khi bạn (1) làm đúng câu gốc xáo đáp án không dùng gợi ý, (2) vượt qua biến thể chống học vẹt (đảo nhiễu / ghép đủ 4 ô ★ / chỉ đúng câu chốt Dokkai), và (3) giữ 0 lỗi qua tối thiểu 2 phiên ôn cách quãng.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btn-ok-help" class="btn-primary">Đã hiểu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-region" class="toast-region" aria-live="polite"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
