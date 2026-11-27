@@ -30,7 +30,7 @@ def calculate_next_fsrs_state(
     review_time: Optional[datetime] = None,
 ) -> FSRSState:
     """Pure function calculating the next FSRS state after a review rating.
-
+    
     Tuned for 7-day high-yield sprint:
     - Again (1): Immediate recycle (10 minutes), records lapse, resets stability.
     - Hard (2): 1 day interval, slightly decreases difficulty factor.
@@ -38,7 +38,7 @@ def calculate_next_fsrs_state(
     - Easy (4): 4-6 days interval for instant recognition.
     """
     now = review_time or datetime.now(timezone.utc)
-
+    
     stability = current_state.stability
     difficulty = current_state.difficulty
     reps = current_state.reps
@@ -106,7 +106,7 @@ def calculate_next_fsrs_state(
             mult = 3.2 * ((11.0 - difficulty) / 5.0)
 
         stability = max(0.6, stability * mult)
-
+        
         # Sprint interval calculation (bounded to 7 days maximum)
         interval_val = stability * (1.0 / DESIRED_RETENTION_SPRINT)
         scheduled_days = max(1, min(7, round(interval_val)))
@@ -133,7 +133,7 @@ def get_due_cards(
     """Retrieve cards that are due for review (or never reviewed), ordered by priority."""
     now_iso = datetime.now(timezone.utc).isoformat()
     query = """
-        SELECT
+        SELECT 
             c.id AS c_id, c.category, c.front, c.back, c.trap, c.example, c.tags, c.created_at,
             f.card_id, f.stability, f.difficulty, f.reps, f.lapses, f.state, f.last_review, f.due_date, f.scheduled_days
         FROM cards c
@@ -148,7 +148,7 @@ def get_due_cards(
 
     # Prioritize: Relearning & Learning cards first, then overdue Reviews, then New cards
     query += """
-        ORDER BY
+        ORDER BY 
             CASE f.state
                 WHEN 'Relearning' THEN 1
                 WHEN 'Learning' THEN 2
@@ -197,7 +197,7 @@ def process_card_review(
     db_path=None,
 ) -> Tuple[CardWithState, bool]:
     """Update card state with review rating and log history.
-
+    
     Returns (updated_card_with_state, logged_to_error_notebook).
     """
     now = datetime.now(timezone.utc)
@@ -208,7 +208,7 @@ def process_card_review(
         # 1. Fetch current card and FSRS state
         row = conn.execute(
             """
-            SELECT
+            SELECT 
                 c.id AS c_id, c.category, c.front, c.back, c.trap, c.example, c.tags, c.created_at,
                 f.card_id, f.stability, f.difficulty, f.reps, f.lapses, f.state, f.last_review, f.due_date, f.scheduled_days
             FROM cards c
@@ -338,11 +338,11 @@ def get_card_stats(db_path=None) -> dict:
             "SELECT category, COUNT(*) AS c FROM cards GROUP BY category"
         ).fetchall()
         reviews_count = conn.execute("SELECT COUNT(*) AS c FROM review_logs").fetchone()["c"]
-
+        
         # Good/Easy vs Again/Hard retention
         retention_row = conn.execute(
             """
-            SELECT
+            SELECT 
                 COUNT(*) AS total,
                 SUM(CASE WHEN rating >= 3 THEN 1 ELSE 0 END) AS successful
             FROM review_logs

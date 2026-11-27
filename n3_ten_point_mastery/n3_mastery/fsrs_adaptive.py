@@ -138,14 +138,14 @@ def compute_pace_feasibility(
 
     warning_msg: Optional[str] = None
     if not is_feasible:
-        status_tag = "[WARN] THIẾU QUỸ THỜI GIAN"
+        status_tag = "[WARN] CẦN THÊM THỜI GIAN"
         warning_msg = (
-            f"[WARN] Quỹ thời gian thiếu hụt: cần tối thiểu {math.ceil(required_per_day)} phút/ngày "
-            f"để hoàn thành 2 vòng ôn FSRS trước ngày thi (hiện tại {d_min} phút/ngày, "
-            f"thiếu {math.ceil(shortfall)} phút/ngày)."
+            f"[WARN] Quỹ thời gian hiện hơi ít: với {d_rem} ngày còn lại, bạn cần khoảng "
+            f"{math.ceil(required_per_day)} phút/ngày để ôn kỹ toàn bộ bài (hiện đặt {d_min} phút/ngày, "
+            f"thiếu khoảng {math.ceil(shortfall)} phút/ngày). Hãy tăng thêm phút học mỗi ngày hoặc tăng số ngày ôn."
         )
     else:
-        status_tag = "[OK] KHẢ THI"
+        status_tag = "[OK] LỊCH HỌC VỪA SỨC"
 
     return PaceFeasibility(
         days_remaining=d_rem,

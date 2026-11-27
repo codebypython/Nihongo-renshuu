@@ -79,7 +79,7 @@ def calculate_dual_readiness(
             mastered_count=0,
             mastered_percent=0.0,
             sections=[],
-            honest_verdict="0.00/10.00 — Chưa có dữ liệu câu hỏi hoặc chưa thực hiện lượt học nào.",
+            honest_verdict="0.00/10.00 — Chưa có câu hỏi nào trong hệ thống. Hãy nạp tệp đề Excel (.xlsx) để bắt đầu.",
         )
 
     grouped: Dict[str, List[Dict[str, Any]]] = {"vocab": [], "grammar": [], "reading": []}
@@ -190,21 +190,21 @@ def calculate_dual_readiness(
     mastered_pct = round((total_mastered / total_q) * 100.0, 1)
 
     if total_attempted == 0:
-        verdict = "0.00/10.00 — Chưa làm bài nào. Bắt đầu từ Trạm Bắc cầu N4 (MU-01) để xây điểm thật."
+        verdict = "0.00/10.00 — Bạn chưa làm câu hỏi nào. Hãy bấm 'Làm câu hỏi ngay' hoặc mở mục 'Ngữ pháp & Từ vựng' để bắt đầu học."
     elif rote_gap >= 2.0:
         verdict = (
-            f"[WARN] Cảnh báo học vẹt: Đề gốc đạt {total_orig_10:.2f}/10 nhưng Chống Biến Thể chỉ đạt "
-            f"{total_mastery_10:.2f}/10 (chênh lệch {rote_gap:.2f} điểm). Cần vượt biến thể & ôn cách quãng >= 2 phiên."
+            f"[WARN] Chú ý học vẹt: Điểm làm đề gốc đạt {total_orig_10:.2f}/10 nhưng Điểm hiểu thật mới đạt "
+            f"{total_mastery_10:.2f}/10 (lệch {rote_gap:.2f} điểm). Hãy chọn chế độ 'Câu hỏi đổi dạng' ở mục Làm câu hỏi và ôn lại sau vài giờ để nhớ chắc bản chất."
         )
     elif total_mastered == total_q:
         verdict = (
-            f"[MASTERED 10/10] Đạt chuẩn làm chủ toàn diện {total_q}/{total_q} câu qua biến thể chống học vẹt "
-            f"và >= 2 phiên cách quãng."
+            f"[OK] Xuất sắc: Bạn đã thuộc vững trọn vẹn {total_q}/{total_q} câu hỏi qua cả đề gốc, "
+            f"câu đổi dạng và tối thiểu 2 lần ôn."
         )
     else:
         verdict = (
-            f"Tiến độ thực chất: {total_mastered}/{total_q} câu đạt [MASTERED 10/10] ({mastered_pct}%). "
-            f"Tiếp tục giữ chuỗi 0 lỗi qua 2 phiên cách quãng."
+            f"Tiến độ thực tế: Bạn đã thuộc vững {total_mastered}/{total_q} câu ({mastered_pct}%). "
+            f"Một câu được tính là thuộc vững khi bạn làm đúng câu gốc (không dùng gợi ý), làm đúng câu đổi dạng và nhớ bền qua 2 lần ôn."
         )
 
     return DualReadinessReport(

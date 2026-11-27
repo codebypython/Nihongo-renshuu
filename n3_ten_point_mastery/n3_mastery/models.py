@@ -127,3 +127,10 @@ class ExamSubmitRequest(BaseModel):
     exam_mode: str = "mini_mock"
     answers: List[ExamAnswerItem]
     duration_sec: float = 0.0
+
+
+class GrammarDrillSubmitRequest(BaseModel):
+    drill_id: int
+    selected_index: int = Field(ge=0, le=3)
+    response_sec: float = Field(default=0.0, ge=0.0)
+    session_seed: str = "default"

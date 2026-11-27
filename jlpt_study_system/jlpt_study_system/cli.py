@@ -260,7 +260,7 @@ def main():
 
     subparsers.add_parser("init", help="Seed database from sprint reference assets")
     subparsers.add_parser("status", help="Display readiness report and score projections")
-
+    
     study_p = subparsers.add_parser("study", help="Interactive flashcard spaced repetition session")
     study_p.add_argument("--limit", type=int, default=20)
     study_p.add_argument("--category", type=str, default=None)

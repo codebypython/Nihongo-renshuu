@@ -1438,6 +1438,7 @@ def import_excel_file(
     file_path: Path,
     db_path: Optional[Path] = None,
     generate_variants: bool = True,
+    seed_grammar: bool = True,
 ) -> Dict[str, Any]:
     """Import a single .xlsx workbook idempotently and optionally auto-generate variants."""
     resolved = Path(file_path)
@@ -1456,7 +1457,7 @@ def import_excel_file(
             (f_hash,),
         ).fetchone()
         if existing_wb:
-            return {
+            report_existing = {
                 "filename": resolved.name,
                 "layout_type": layout_type,
                 "raw_count": int(existing_wb["raw_count"]),
@@ -1466,29 +1467,41 @@ def import_excel_file(
                 "already_imported": True,
                 "variants_generated": 0,
             }
+            existing_done = True
+        else:
+            existing_done = False
 
-        cur = conn.execute(
-            "INSERT INTO SOURCE_WORKBOOKS (filename, file_hash, layout_type) VALUES (?, ?, ?)",
-            (resolved.name, f_hash, layout_type),
-        )
-        workbook_id = int(cur.lastrowid)
-
-        parser = LAYOUT_PARSERS[layout_type]
-        raw_count, imported_count, touched_qids = parser(wb, conn, workbook_id)
-        if raw_count == 0:
-            raise ValueError(
-                f"Tệp Excel '{resolved.name}' khớp layout '{layout_type}' nhưng không có câu hỏi hợp lệ nào (cần 4 phương án và đáp án đúng 1–4)."
+        if not existing_done:
+            cur = conn.execute(
+                "INSERT INTO SOURCE_WORKBOOKS (filename, file_hash, layout_type) VALUES (?, ?, ?)",
+                (resolved.name, f_hash, layout_type),
             )
-        conn.execute(
-            "UPDATE SOURCE_WORKBOOKS SET raw_count=?, imported_count=? WHERE id=?",
-            (raw_count, imported_count, workbook_id),
-        )
+            workbook_id = int(cur.lastrowid)
 
-        variants_generated = 0
-        if generate_variants:
-            from n3_mastery.variant_generator import ensure_variants_for_questions
+            parser = LAYOUT_PARSERS[layout_type]
+            raw_count, imported_count, touched_qids = parser(wb, conn, workbook_id)
+            if raw_count == 0:
+                raise ValueError(
+                    f"Tệp Excel '{resolved.name}' khớp layout '{layout_type}' nhưng không có câu hỏi hợp lệ nào (cần 4 phương án và đáp án đúng 1–4)."
+                )
+            conn.execute(
+                "UPDATE SOURCE_WORKBOOKS SET raw_count=?, imported_count=? WHERE id=?",
+                (raw_count, imported_count, workbook_id),
+            )
 
-            variants_generated = ensure_variants_for_questions(conn, touched_qids)
+            variants_generated = 0
+            if generate_variants:
+                from n3_mastery.variant_generator import ensure_variants_for_questions
+
+                variants_generated = ensure_variants_for_questions(conn, touched_qids)
+
+    if seed_grammar:
+        from n3_mastery.grammar_engine import seed_grammar_and_foundation
+
+        seed_grammar_and_foundation(db_path=db_path)
+
+    if existing_done:
+        return report_existing
 
     return {
         "filename": resolved.name,
@@ -1519,7 +1532,7 @@ def import_all_excel(
     total_imported = 0
     total_variants = 0
     for f in files:
-        res = import_excel_file(f, db_path=db_path, generate_variants=False)
+        res = import_excel_file(f, db_path=db_path, generate_variants=False, seed_grammar=False)
         reports.append(res)
         total_raw += res["raw_count"]
         total_imported += res["newly_imported_count"]
@@ -1528,6 +1541,10 @@ def import_all_excel(
         from n3_mastery.variant_generator import ensure_variants_for_all
 
         total_variants = ensure_variants_for_all(db_path=db_path)
+
+    from n3_mastery.grammar_engine import seed_grammar_and_foundation
+
+    seed_grammar_and_foundation(db_path=db_path)
 
     with transaction(db_path) as conn:
         unique_questions = conn.execute("SELECT COUNT(*) FROM QUESTIONS").fetchone()[0]

@@ -1,9 +1,16 @@
 """Rich Terminal CLI for JLPT N3 10/10 Mastery System."""
 
 import argparse
+from datetime import datetime
 import json
 import secrets
+import socket
+import sqlite3
 import sys
+import threading
+import time
+import urllib.request
+import webbrowser
 from pathlib import Path
 from typing import List, Optional
 
@@ -12,7 +19,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from n3_mastery.config import DEFAULT_API_HOST, DEFAULT_API_PORT, get_excel_dir
+from n3_mastery.config import BASE_DIR, DEFAULT_API_HOST, DEFAULT_API_PORT, get_db_path, get_excel_dir
 from n3_mastery.database import get_connection, init_db, transaction
 from n3_mastery.drill_engine import (
     get_error_notebook,
@@ -22,6 +29,12 @@ from n3_mastery.drill_engine import (
 from n3_mastery.fsrs_adaptive import (
     compute_pace_feasibility,
     update_pace_settings,
+)
+from n3_mastery.grammar_engine import (
+    get_grammar_overview,
+    get_grammar_point_detail,
+    list_grammar_points,
+    seed_grammar_and_foundation,
 )
 from n3_mastery.importer import import_all_excel, import_excel_file
 from n3_mastery.readiness import calculate_dual_readiness, is_question_mastered
@@ -40,10 +53,14 @@ def _ensure_seeded_if_empty() -> None:
     conn = get_connection()
     try:
         cnt = conn.execute("SELECT COUNT(*) FROM QUESTIONS").fetchone()[0]
+        gp_cnt = conn.execute("SELECT COUNT(*) FROM GRAMMAR_POINTS").fetchone()[0]
+        qa_cnt = conn.execute("SELECT COUNT(*) FROM QUESTION_GRAMMAR_ANALYSES").fetchone()[0]
     finally:
         conn.close()
     if cnt == 0 and get_excel_dir().exists():
         import_all_excel(generate_variants=True)
+    elif gp_cnt == 0 or qa_cnt < cnt:
+        seed_grammar_and_foundation()
 
 
 def cmd_status() -> int:
@@ -325,6 +342,282 @@ def cmd_study(unit_code: Optional[str], mode: str, limit: int, exam_mode: bool) 
     return 0
 
 
+def cmd_grammar(level: Optional[str], exam_only: bool, search: Optional[str]) -> int:
+    _ensure_seeded_if_empty()
+    ov = get_grammar_overview()
+    lvl_summary = " | ".join(
+        f"{lb['level']}: {lb['mastered']}/{lb['total']}" for lb in ov.get("levels", [])
+    )
+    console.print(
+        Panel(
+            f"[bold]Tổng điểm ngữ pháp:[/bold] {ov['total_points']} "
+            f"(Bộ đề .xlsx: {ov['exam_corpus_count']} | Mở rộng JLPT: {ov['jlpt_extension_count']})\n"
+            f"[bold]Bài luyện ngữ pháp (Drills):[/bold] {ov['total_drills']} | "
+            f"[bold]Từ vựng Nền tảng:[/bold] {ov['vocab_foundation_count']}\n"
+            f"[bold]Phân bố JLPT:[/bold] {lvl_summary or 'Chưa có dữ liệu'}",
+            title="THƯ VIỆN NGỮ PHÁP & LỘ TRÌNH JLPT (N5 -> N2)",
+        )
+    )
+
+    pts = list_grammar_points(
+        scope="exam" if exam_only else "all",
+        level=level,
+        q=search,
+    )
+    if not pts:
+        console.print("[INFO] Không tìm thấy mẫu ngữ pháp phù hợp bộ lọc.")
+        return 0
+
+    table = Table(title=f"Danh sách Ngữ pháp ({len(pts)} mẫu)")
+    table.add_column("Mã", style="bold")
+    table.add_column("Cấp")
+    table.add_column("Nguồn")
+    table.add_column("Mẫu ngữ pháp")
+    table.add_column("Nghĩa cốt lõi")
+    table.add_column("FSRS")
+    for p in pts:
+        src_tag = "[THI]" if p["in_exam_corpus"] else "[JLPT]"
+        fsrs = p["fsrs"]
+        fsrs_tag = "[MASTERED]" if fsrs["mastered"] else fsrs["state"].upper()
+        table.add_row(
+            p["code"],
+            p["jlpt_level"],
+            src_tag,
+            p["pattern"],
+            p["core_meaning_vi"][:60],
+            fsrs_tag,
+        )
+    console.print(table)
+    return 0
+
+
+def cmd_grammar_inspect(code: str) -> int:
+    _ensure_seeded_if_empty()
+    detail = get_grammar_point_detail(code)
+    if detail is None:
+        console.print(f"[FAIL] Không tìm thấy mẫu ngữ pháp '{code}'")
+        return 1
+
+    form_lines = "\n".join(
+        f"  - {row.get('pos', '')}: {row.get('rule', '')}"
+        for row in detail.get("formation_table", [])
+    )
+    pair_lines = "\n".join(
+        f"  - Đối chiếu {cp.get('rival_pattern', '')}: {cp.get('difference_vi', '')} (Mẹo: {cp.get('quick_test_vi', '')})"
+        for cp in detail.get("confusable_pairs", [])
+    )
+    ex_lines = "\n".join(
+        f"  - {ex.get('jp', '')} -> {ex.get('vi', '')}"
+        for ex in detail.get("examples", [])
+    )
+    q_lines = "\n".join(
+        f"  - Q#{lq['question_id']} [{lq['unit_code']} {lq['mondai_type']} {lq['role']}]: {lq['note_vi']}"
+        for lq in detail.get("linked_questions", [])
+    )
+
+    body = (
+        f"[bold]Mẫu:[/bold] {detail['pattern']} ({detail['jlpt_level']} · {detail['category_label_vi']})\n"
+        f"[bold]Phạm vi:[/bold] {'[THI CUỐI KÌ .xlsx]' if detail['in_exam_corpus'] else '[MỞ RỘNG JLPT]'} | "
+        f"[bold]Văn phong:[/bold] {detail['register_tag']}\n"
+        f"[bold]Công thức kết hợp:[/bold] {detail['formation_formula']}\n"
+        f"{form_lines}\n\n"
+        f"[bold]Nghĩa cốt lõi:[/bold] {detail['core_meaning_vi']}\n"
+        f"[bold]Giải phẫu ngữ nghĩa & ngữ dụng:[/bold]\n{detail['deep_explanation_vi']}\n\n"
+        f"[bold]Cặp dễ nhầm:[/bold]\n{pair_lines or '  (Không có)'}\n\n"
+        f"[bold]Ví dụ chuẩn:[/bold]\n{ex_lines or '  (Không có)'}\n\n"
+        f"[bold]Câu hỏi đề thi liên kết ({len(detail.get('linked_questions', []))}):[/bold]\n{q_lines or '  (Mẫu mở rộng JLPT ngoài bộ đề)'}"
+    )
+    console.print(Panel(body, title=f"BÀI HỌC NGỮ PHÁP 3 CHIỀU — {detail['code']}"))
+    return 0
+
+
+def _local_url(host: str, port: int) -> str:
+    connect_host = "127.0.0.1" if host in ("0.0.0.0", "::", "") else host
+    return f"http://{connect_host}:{port}"
+
+
+def _is_mastery_server_running(host: str, port: int) -> bool:
+    """Return True if an active instance of this app already answers /api/health."""
+    url = f"{_local_url(host, port)}/api/health"
+    try:
+        with urllib.request.urlopen(url, timeout=1.5) as resp:
+            if resp.status != 200:
+                return False
+            data = json.loads(resp.read().decode("utf-8"))
+            return isinstance(data, dict) and data.get("status") in ("online", "ok") and "grammar_points" in data
+    except Exception:
+        return False
+
+
+def _pick_available_port(host: str, preferred_port: int) -> int:
+    """Return preferred_port if bindable, otherwise scan preferred_port+1..+20."""
+    bind_host = host or "127.0.0.1"
+    for port in range(preferred_port, preferred_port + 21):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            try:
+                sock.bind((bind_host, port))
+                return port
+            except OSError:
+                continue
+    return preferred_port
+
+
+def _open_browser_when_ready(base_url: str, timeout: float = 15.0) -> None:
+    """Poll /api/health in background and open default browser once ready."""
+    deadline = time.time() + timeout
+    health_url = f"{base_url}/api/health"
+    while time.time() < deadline:
+        try:
+            with urllib.request.urlopen(health_url, timeout=1.0) as resp:
+                if resp.status == 200:
+                    webbrowser.open(base_url)
+                    return
+        except Exception:
+            time.sleep(0.25)
+
+
+def cmd_help_banner() -> int:
+    """Print friendly Vietnamese quick-start guide when CLI is invoked without arguments."""
+    console.print(
+        Panel(
+            "[bold]CÁCH MỞ NHANH GIAO DIỆN WEB (KHUYÊN DÙNG):[/bold]\n"
+            "  • Nhấp đúp [bold]CHAY_NHANH_WEB.bat[/bold] (ở thư mục Language_Lab) hoặc [bold]start_web.bat[/bold]\n"
+            "  • Hoặc gõ: [bold]py -3.11 n3_cli.py quickstart[/bold]\n\n"
+            "[bold]CÁC LỆNH TIỆN ÍCH KHÁC:[/bold]\n"
+            "  • [bold]doctor[/bold]           : Kiểm tra dữ liệu đề thi, ngữ pháp và cấu hình\n"
+            "  • [bold]status[/bold]           : Xem điểm hiện tại và tiến độ 12 chủ đề\n"
+            "  • [bold]grammar[/bold]          : Xem danh sách ngữ pháp N5->N2 và bài học\n"
+            "  • [bold]study[/bold]            : Làm nhanh câu hỏi ngay trên terminal\n"
+            "  • [bold]import[/bold]           : Nạp lại toàn bộ file đề Excel (.xlsx)\n"
+            "  • [bold]backup[/bold]           : Sao lưu an toàn tiến độ học tập (.db)",
+            title="HƯỚNG DẪN SỬ DỤNG CHƯƠNG TRÌNH ÔN THI TIẾNG NHẬT",
+        )
+    )
+    return 0
+
+
+def cmd_doctor() -> int:
+    """Verify SQLite integrity, exam corpus counts, grammar corpus, and Excel source directory."""
+    _ensure_seeded_if_empty()
+    db_path = get_db_path()
+    excel_dir = get_excel_dir()
+
+    conn = get_connection(db_path)
+    try:
+        integrity = str(conn.execute("PRAGMA integrity_check").fetchone()[0])
+        counts = {
+            "QUESTIONS": conn.execute("SELECT COUNT(*) FROM QUESTIONS").fetchone()[0],
+            "DOKKAI_PASSAGES": conn.execute("SELECT COUNT(*) FROM PASSAGES WHERE section='reading'").fetchone()[0],
+            "VARIANT_DRILLS": conn.execute("SELECT COUNT(*) FROM VARIANT_DRILLS").fetchone()[0],
+            "GRAMMAR_POINTS": conn.execute("SELECT COUNT(*) FROM GRAMMAR_POINTS").fetchone()[0],
+            "GRAMMAR_DRILLS": conn.execute("SELECT COUNT(*) FROM GRAMMAR_DRILLS").fetchone()[0],
+            "VOCAB_FOUNDATION": conn.execute("SELECT COUNT(*) FROM VOCAB_FOUNDATION").fetchone()[0],
+            "ATTEMPT_LOGS": conn.execute("SELECT COUNT(*) FROM ATTEMPT_LOGS").fetchone()[0],
+        }
+    finally:
+        conn.close()
+
+    excel_exists = excel_dir.exists()
+    xlsx_files = list(excel_dir.glob("*.xlsx")) if excel_exists else []
+    healthy = integrity.lower() == "ok" and counts["QUESTIONS"] > 0
+
+    table = Table(title="KIỂM TRA SỨC KHỎE HỆ THỐNG (DOCTOR)")
+    table.add_column("Hạng mục")
+    table.add_column("Trạng thái")
+    table.add_column("Chi tiết")
+
+    table.add_row("Cơ sở dữ liệu SQLite", "[OK]" if integrity.lower() == "ok" else "[FAIL]", f"{db_path} ({integrity})")
+    table.add_row("Thư mục đề Excel", "[OK]" if excel_exists else "[WARN]", f"{excel_dir} ({len(xlsx_files)} file .xlsx)")
+    table.add_row("Ngân hàng câu hỏi đề gốc", "[OK]" if counts["QUESTIONS"] > 0 else "[FAIL]", f"{counts['QUESTIONS']} câu | {counts['DOKKAI_PASSAGES']} bài đọc | {counts['VARIANT_DRILLS']} câu đổi dạng")
+    table.add_row("Kho Ngữ pháp & Từ vựng", "[OK]" if counts["GRAMMAR_POINTS"] > 0 else "[WARN]", f"{counts['GRAMMAR_POINTS']} mẫu ngữ pháp | {counts['GRAMMAR_DRILLS']} bài tập | {counts['VOCAB_FOUNDATION']} từ vựng")
+    table.add_row("Lịch sử làm bài đã lưu", "[OK]", f"{counts['ATTEMPT_LOGS']} lượt làm bài")
+    console.print(table)
+    return 0 if healthy else 1
+
+
+def cmd_backup(output_dir: Optional[str] = None) -> int:
+    """Create a hot SQLite backup copy in data/backups (or specified --dir)."""
+    init_db()
+    src_path = get_db_path()
+    target_dir = Path(output_dir) if output_dir else (BASE_DIR / "data" / "backups")
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    dest_path = target_dir / f"n3_mastery_backup_{stamp}.db"
+    suffix = 1
+    while dest_path.exists():
+        dest_path = target_dir / f"n3_mastery_backup_{stamp}_{suffix}.db"
+        suffix += 1
+
+    src_conn = sqlite3.connect(str(src_path))
+    try:
+        dst_conn = sqlite3.connect(str(dest_path))
+        try:
+            src_conn.backup(dst_conn)
+        finally:
+            dst_conn.close()
+        q_cnt = src_conn.execute("SELECT COUNT(*) FROM QUESTIONS").fetchone()[0]
+        att_cnt = src_conn.execute("SELECT COUNT(*) FROM ATTEMPT_LOGS").fetchone()[0]
+    finally:
+        src_conn.close()
+
+    console.print(
+        Panel(
+            f"[OK] Đã sao lưu an toàn dữ liệu học tập!\n"
+            f"Tệp sao lưu: {dest_path}\n"
+            f"Nội dung bảo toàn: {q_cnt} câu hỏi | {att_cnt} lượt làm bài.",
+            title="SAO LƯU DỮ LIỆU THÀNH CÔNG",
+        )
+    )
+    return 0
+
+
+def cmd_quickstart(host: str, port: int, no_browser: bool) -> int:
+    """Initialize DB if needed, reuse running server or pick free port, print guide, and launch browser."""
+    _ensure_seeded_if_empty()
+
+    if _is_mastery_server_running(host, port):
+        url = _local_url(host, port)
+        console.print(f"[OK] Chương trình đang chạy sẵn tại {url}")
+        if not no_browser:
+            webbrowser.open(url)
+        return 0
+
+    chosen_port = _pick_available_port(host, port)
+    base_url = _local_url(host, chosen_port)
+
+    conn = get_connection()
+    try:
+        q_cnt = conn.execute("SELECT COUNT(*) FROM QUESTIONS").fetchone()[0]
+        gp_cnt = conn.execute("SELECT COUNT(*) FROM GRAMMAR_POINTS").fetchone()[0]
+        vf_cnt = conn.execute("SELECT COUNT(*) FROM VOCAB_FOUNDATION").fetchone()[0]
+    finally:
+        conn.close()
+
+    console.print(
+        Panel(
+            f"[bold]Địa chỉ Web App:[/bold] {base_url}\n"
+            f"[bold]Kho học liệu sẵn sàng:[/bold] {q_cnt} câu đề Excel | {gp_cnt} mẫu ngữ pháp N5–N2 | {vf_cnt} từ vựng\n\n"
+            "[bold]3 bước học nhanh trên trình duyệt:[/bold]\n"
+            "  1. Mở tab [bold]Ngữ pháp & Từ vựng[/bold] để xem công thức và làm bài tập chia thể.\n"
+            "  2. Mở tab [bold]Làm câu hỏi[/bold] để luyện đề và đọc phần giải thích sau mỗi câu.\n"
+            "  3. Vào tab [bold]Thi thử[/bold] để kiểm tra năng lực thực tế như thi thật.\n\n"
+            "Nhấn [bold]Ctrl + C[/bold] tại cửa sổ này khi bạn muốn tắt máy chủ.",
+            title="KHỞI CHẠY NHANH ÔN THI TIẾNG NHẬT",
+        )
+    )
+
+    if not no_browser:
+        threading.Thread(
+            target=_open_browser_when_ready,
+            args=(base_url,),
+            daemon=True,
+        ).start()
+
+    uvicorn.run("n3_mastery.api:app", host=host, port=chosen_port, reload=False)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="n3_cli.py",
@@ -332,7 +625,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("status", help="Xem Bảng điểm Kép /10, Adaptive Pace và tiến độ 12 Micro-Units")
+    p_qs = sub.add_parser("quickstart", help="Kiểm tra dữ liệu, khởi chạy Web App và tự mở trình duyệt")
+    p_qs.add_argument("--host", default=DEFAULT_API_HOST)
+    p_qs.add_argument("--port", type=int, default=8000)
+    p_qs.add_argument("--no-browser", action="store_true", help="Không tự động mở trình duyệt")
+
+    sub.add_parser("doctor", help="Kiểm tra sức khỏe cơ sở dữ liệu và bộ đề Excel")
+
+    p_bk = sub.add_parser("backup", help="Sao lưu an toàn cơ sở dữ liệu tiến độ học (.db)")
+    p_bk.add_argument("--dir", default=None, help="Thư mục lưu file sao lưu")
+
+    sub.add_parser("status", help="Xem Bảng điểm Kép /10, lịch học và tiến độ 12 chủ đề")
 
     p_imp = sub.add_parser("import", help="Nạp dữ liệu từ tệp .xlsx hoặc thư mục Excel")
     p_imp.add_argument("target", nargs="?", default=None, help="Đường dẫn file .xlsx hoặc thư mục")
@@ -342,17 +645,25 @@ def build_parser() -> argparse.ArgumentParser:
     p_pace.add_argument("--minutes", type=int, default=None)
     p_pace.add_argument("--scoring", choices=["jlpt_weighted", "equal_weighted"], default=None)
 
-    p_bridge = sub.add_parser("bridge", help="Xem bài học Trạm Bắc cầu N4->N3 của một Unit")
+    p_bridge = sub.add_parser("bridge", help="Xem bài học Trạm Bắc cầu N4->N3 của một chủ đề")
     p_bridge.add_argument("unit_code", help="Ví dụ: MU-01")
     p_bridge.add_argument("--complete", action="store_true", help="Đánh dấu hoàn thành trạm bắc cầu")
 
-    sub.add_parser("errors", help="Xem Sổ tay Lỗ hổng")
+    sub.add_parser("errors", help="Xem Sổ tay câu hay sai")
 
     p_study = sub.add_parser("study", help="Luyện tập tương tác trên terminal")
-    p_study.add_argument("--unit", default=None, help="Mã Micro-Unit (vd: MU-01)")
+    p_study.add_argument("--unit", default=None, help="Mã chủ đề (vd: MU-01)")
     p_study.add_argument("--mode", default="mixed", choices=["mixed", "original", "variant", "remediation"])
     p_study.add_argument("--limit", type=int, default=5)
-    p_study.add_argument("--exam", action="store_true", help="Bật chế độ Phòng thi (khóa Giàn giáo)")
+    p_study.add_argument("--exam", action="store_true", help="Bật chế độ Thi thử (khóa gợi ý)")
+
+    p_gram = sub.add_parser("grammar", help="Xem thư viện Ngữ pháp & lộ trình JLPT N5->N2")
+    p_gram.add_argument("--level", default=None, choices=["N5", "N4", "N3", "N2", "N1"])
+    p_gram.add_argument("--exam-only", action="store_true", help="Chỉ hiển thị mẫu có trong bộ đề .xlsx")
+    p_gram.add_argument("--search", default=None, help="Tìm kiếm theo mã, mẫu hoặc nghĩa")
+
+    p_gi = sub.add_parser("grammar-inspect", help="Xem chi tiết 3 chiều và câu đề liên kết của một mẫu ngữ pháp")
+    p_gi.add_argument("code", help="Ví dụ: GP-N3-001")
 
     p_srv = sub.add_parser("serve", help="Khởi chạy máy chủ Web SPA FastAPI")
     p_srv.add_argument("--host", default=DEFAULT_API_HOST)
@@ -361,8 +672,18 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
+    effective_argv = sys.argv[1:] if argv is None else list(argv)
+    if len(effective_argv) == 0:
+        return cmd_help_banner()
+
     parser = build_parser()
-    args = parser.parse_args(argv)
+    args = parser.parse_args(effective_argv)
+    if args.command == "quickstart":
+        return cmd_quickstart(args.host, args.port, args.no_browser)
+    if args.command == "doctor":
+        return cmd_doctor()
+    if args.command == "backup":
+        return cmd_backup(args.dir)
     if args.command == "status":
         return cmd_status()
     if args.command == "import":
@@ -375,6 +696,10 @@ def main(argv: Optional[List[str]] = None) -> int:
         return cmd_errors()
     if args.command == "study":
         return cmd_study(args.unit, args.mode, args.limit, args.exam)
+    if args.command == "grammar":
+        return cmd_grammar(args.level, args.exam_only, args.search)
+    if args.command == "grammar-inspect":
+        return cmd_grammar_inspect(args.code)
     if args.command == "serve":
         uvicorn.run("n3_mastery.api:app", host=args.host, port=args.port, reload=False)
         return 0

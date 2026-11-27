@@ -7,12 +7,12 @@
 
 1. Mở phần mềm **Anki** trên máy tính (hoặc điện thoại).
 2. Vào **File -> Import**:
-   - Chọn tệp: `jlpt_n3_sprint/anki_grammar_tier1.csv`
+   - Chọn tệp: `d:\Development\jlpt_n3_sprint\anki_grammar_tier1.csv`
      - Field 1: Front (Pattern)
      - Field 2: Back (Meaning & Formation)
      - Field 3: Back (Trap & Bẫy trắc nghiệm)
      - Field 4: Back (Example)
-   - Chọn tệp: `jlpt_n3_sprint/anki_vocab_discourse.csv`
+   - Chọn tệp: `d:\Development\jlpt_n3_sprint\anki_vocab_discourse.csv`
      - Field 1: Front (Word / Kanji)
      - Field 2: Back (Type / Furigana)
      - Field 3: Back (Meaning & Core Signal)

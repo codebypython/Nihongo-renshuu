@@ -233,10 +233,10 @@ def determine_scaffold_tier(stability: float, exam_mode: bool = False) -> int:
 
 def tier_label_vi(tier: int) -> str:
     if tier == 1:
-        return "Cấp 1: Bắc cầu N4->N3 (Che từ đang hỏi 【...】)"
+        return "Hỗ trợ Mức 1: Hiện phiên âm từ xung quanh (che từ đang hỏi 【...】)"
     if tier == 2:
-        return "Cấp 2: Rút giàn giáo (Ẩn mặc định, phím H mở 1 gợi ý)"
-    return "Cấp 3: Phòng thi (Khóa 100% Furigana nhân tạo)"
+        return "Hỗ trợ Mức 2: Ẩn phiên âm phụ (bấm phím H nếu cần 1 gợi ý)"
+    return "Mức 3: Như thi thật (không gợi ý, không phiên âm phụ)"
 
 
 def _extract_masked_terms(

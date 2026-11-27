@@ -15,7 +15,7 @@ from jlpt_study_system.config import SPRINT_REFERENCE_DIR
 
 def test_import_all_idempotency(tmp_path):
     db_file = tmp_path / "idempotent_test.db"
-
+    
     # First import
     res1 = import_all(db_path=db_file)
     assert res1["grammar_cards"] == 40

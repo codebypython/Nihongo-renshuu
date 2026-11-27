@@ -140,7 +140,7 @@ def get_drill_performance_summary(db_path=None) -> Dict[str, Any]:
     with get_db(db_path) as conn:
         stats = conn.execute(
             """
-            SELECT
+            SELECT 
                 d.drill_type,
                 COUNT(*) AS total_attempts,
                 SUM(h.is_correct) AS correct_count,

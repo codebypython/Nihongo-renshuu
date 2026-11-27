@@ -54,7 +54,7 @@ function initNavigation() {
 
 function switchTab(tabId) {
     state.activeTab = tabId;
-
+    
     // Update active nav item
     document.querySelectorAll('.nav-item').forEach(el => {
         el.classList.toggle('active', el.getAttribute('data-tab') === tabId);
@@ -128,7 +128,7 @@ async function loadDashboardData() {
 
         // Render Strategic Recommendations
         const recContainer = document.getElementById('recommendations-container');
-        recContainer.innerHTML = readinessRes.critical_recommendations.map(rec =>
+        recContainer.innerHTML = readinessRes.critical_recommendations.map(rec => 
             `<div class="stat-row"><span class="stat-label text-primary">${escapeHtml(rec)}</span></div>`
         ).join('');
 
@@ -208,7 +208,7 @@ async function loadCurriculumDay(dayNum) {
         `).join('');
 
         const adviceContainer = document.getElementById('curriculum-adaptive-advice');
-        adviceContainer.innerHTML = adviceData.recommendations.map(adv =>
+        adviceContainer.innerHTML = adviceData.recommendations.map(adv => 
             `<div class="stat-row"><span class="stat-label text-primary">${escapeHtml(adv)}</span></div>`
         ).join('');
 
@@ -590,8 +590,8 @@ async function loadErrorNotebook() {
                 <td style="max-width: 320px; font-size: 12px;">${escapeHtml(err.trap_analysis)}</td>
                 <td class="text-center font-mono">${err.attempt_count}</td>
                 <td>
-                    ${err.remediated ?
-                        '<span class="text-success">[REMEDIATED]</span>' :
+                    ${err.remediated ? 
+                        '<span class="text-success">[REMEDIATED]</span>' : 
                         `<button class="btn btn-secondary btn-sm" onclick="remediateTrap(${err.id})">ĐÃ KHẮC PHỤC</button>`
                     }
                 </td>

@@ -260,6 +260,10 @@ def submit_answer(
         passage_row = None
         if q["passage_id"] is not None:
             passage_row = conn.execute("SELECT * FROM PASSAGES WHERE id=?", (q["passage_id"],)).fetchone()
+
+        from n3_mastery.grammar_engine import get_question_grammar_payload
+
+        grammar_breakdown = get_question_grammar_payload(question_id, conn)
     finally:
         conn.close()
 
@@ -397,6 +401,7 @@ def submit_answer(
         "passage_translation_vi": passage_row["vietnamese_text"] if passage_row else None,
         "condition_matrix": json.loads(passage_row["condition_matrix_json"] or "[]") if passage_row else [],
         "notebook_meta": q_meta,
+        "grammar_breakdown": grammar_breakdown,
         "remediated": remediated,
         "fsrs": fsrs_res,
     }
@@ -427,11 +432,14 @@ def get_error_notebook(limit: int = 100, db_path: Optional[Path] = None) -> List
             """,
             (limit,),
         ).fetchall()
+        from n3_mastery.grammar_engine import get_question_grammar_payload
+
         items: List[Dict[str, Any]] = []
         for r in rows:
+            q_id = int(r["id"])
             items.append(
                 {
-                    "question_id": int(r["id"]),
+                    "question_id": q_id,
                     "unit_code": r["unit_code"],
                     "section": r["section"],
                     "mondai_type": r["mondai_type"],
@@ -444,6 +452,7 @@ def get_error_notebook(limit: int = 100, db_path: Optional[Path] = None) -> List
                     "stability": float(r["stability"]),
                     "last_mode": r["last_mode"],
                     "last_attempt_at": r["last_attempt_at"],
+                    "grammar_breakdown": get_question_grammar_payload(q_id, conn),
                 }
             )
         return items

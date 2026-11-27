@@ -153,7 +153,7 @@ def get_pomodoro_summary(day_number: Optional[int] = None, db_path=None) -> Dict
     completed = [r for r in rows if r["status"] == "completed"]
     total_minutes = sum(r["duration_minutes"] for r in completed)
     target_sessions = TARGET_DAILY_POMODORO if day_number is not None else (TARGET_DAILY_POMODORO * SPRINT_TOTAL_DAYS)
-
+    
     return {
         "day_number": day_number,
         "total_sessions": len(rows),
@@ -213,7 +213,7 @@ def get_adaptive_schedule_advice(current_day: int = 1, db_path=None) -> List[str
         # Check Choukai reflex drill accuracy
         choukai_stats = conn.execute(
             """
-            SELECT
+            SELECT 
                 COUNT(*) AS total,
                 SUM(is_correct) AS correct,
                 AVG(response_time_sec) AS avg_speed
@@ -226,7 +226,7 @@ def get_adaptive_schedule_advice(current_day: int = 1, db_path=None) -> List[str
         # Check Dokkai drill accuracy
         dokkai_stats = conn.execute(
             """
-            SELECT
+            SELECT 
                 COUNT(*) AS total,
                 SUM(is_correct) AS correct
             FROM drill_history h

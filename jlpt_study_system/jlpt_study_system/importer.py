@@ -196,32 +196,32 @@ BUILTIN_PLAYBOOK_SCHEDULE = [
     (1, "morning", "Công phá Ngữ pháp hạt nhân (Phần 1 - Trợ từ phức)", 240, "Import dữ liệu, học 20 mẫu đầu tiên: に対して, にとって, に関して, によって..."),
     (1, "afternoon", "Đột phá Đọc quét Dokkai & Tìm kiếm thông tin", 210, "Áp dụng thuật toán quét chú thích hoa thị (*), làm 3 bài Tìm kiếm thông tin."),
     (1, "evening", "Anki Từ nối lập luận & Choukai Mondai 5 phản xạ", 300, "150 lượt thẻ Từ nối, luyện 20 mẫu phản xạ đối đáp ngắn Mondai 5."),
-
+    
     # Day 2
     (2, "morning", "Hoàn tất Ngữ pháp Tier 1 (Họ わけ, こと, もの, Thể sai khiến bị động)", 240, "20 mẫu còn lại, bẻ khóa bẫy わけではない vs わけがない."),
     (2, "afternoon", "Nạp 120 Từ nối lập luận & Đoản văn N3", 210, "Thực hành kỹ thuật đọc câu hỏi trước - khoanh vùng từ nối trên 4 bài đoản văn."),
     (2, "evening", "Review 250 Flashcard tích lũy & Choukai tốc độ cao", 300, "Nghe 30 câu Mondai 5 tức thì (chọn đáp án trong 2 giây)."),
-
+    
     # Day 3
     (3, "morning", "Đột phá Đoản văn N3 (Timebox 3 phút/bài)", 240, "Bấm giờ làm 8 bài Đoản văn, giải phẫu bẫy tuyệt đối hóa và ngoài bài."),
     (3, "afternoon", "Luyện 4 bài Tìm kiếm thông tin & 50 Kanji biển báo", 210, "Mục tiêu đúng 100% phần Thông tin quảng cáo biểu mẫu."),
     (3, "evening", "Nghe Mondai 1 (Bắt từ khóa 'まず' & từ bẫy 'その前に')", 300, "Luyện 10 bài Mondai 1 Hiểu nhiệm vụ, triệt tiêu bẫy đổi ý."),
-
+    
     # Day 4
     (4, "morning", "Thành trì Nghe hiểu Mondai 5 (Tốc độ 1.1x)", 240, "Nghe 40 câu Mondai 5 liên tục, phản xạ tự động với kính ngữ & từ chối khéo."),
     (4, "afternoon", "Giải mã Mondai 2 (Đọc trước 4 đáp án trong 20s)", 210, "Kỹ thuật nhìn lướt 4 động từ cuối của từng phương án trên giấy."),
     (4, "evening", "Full Test Nghe hiểu 40 phút mô phỏng phòng thi", 300, "Chấm điểm bám sàn 30/60 điểm, triệt tiêu nguy cơ liệt."),
-
+    
     # Day 5
     (5, "morning", "Đọc Trung văn & 30 Động từ phức cốt lõi N3", 240, "Nạp động từ phức: 引き受ける, 思いつく... Áp dụng 1 câu hỏi/1-2 đoạn văn."),
     (5, "afternoon", "Bấm giờ thi trọn gói Phần 2 (Ngữ pháp + Đọc hiểu 70 phút)", 210, "Cắt đúng 20 phút Ngữ pháp, 50 phút Đọc hiểu. Đo lường rủi ro cháy giờ."),
     (5, "evening", "Giải phẫu chi tiết đề thi & Cập nhật Sổ tay bẫy trắc nghiệm", 300, "Phân tích nguyên nhân sai lầm, ôn lướt 300 thẻ Anki."),
-
+    
     # Day 6
     (6, "morning", "Mock Test 1: Mô phỏng phòng thi 100% (3 phần thi chuẩn giờ)", 240, "Phần 1 (30p), Phần 2 (70p), Phần 3 (40p) đúng kỷ luật phòng thi."),
     (6, "afternoon", "Giải phẫu toàn bộ Mock Test 1 (Chẩn đoán điểm yếu)", 210, "Xác định rõ lỗ hổng: Ngữ pháp hay nhầm, hay bẫy đọc hiểu ngoài bài."),
     (6, "evening", "Vá lỗ hổng khẩn cấp & Luyện tập có chủ đích các điểm liệt", 300, "Tái kiểm tra các mục trong Sổ tay bẫy trắc nghiệm."),
-
+    
     # Day 7
     (7, "morning", "Mini-Mock Test tinh gọn & Duyệt toàn bộ 40 Ngữ pháp Tier 1", 240, "20 câu ngữ pháp trọng điểm, 2 bài đọc ngắn củng cố tự tin."),
     (7, "afternoon", "Nghe lại toàn bộ câu Mondai 5 từng sai & Rà soát quy tắc Dokkai", 210, "Bảo đảm phản xạ 100% trong 2 giây."),

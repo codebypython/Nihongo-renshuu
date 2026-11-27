@@ -55,11 +55,22 @@ def test_real_browser_desktop_and_mobile_light_dark_zero_errors(isolated_db, tmp
     env["PYTHONPATH"] = str(BASE_DIR)
 
     proc = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "n3_mastery.api:app", "--host", "127.0.0.1", "--port", str(port)],
+        [
+            sys.executable,
+            "-m",
+            "uvicorn",
+            "n3_mastery.api:app",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            str(port),
+            "--log-level",
+            "warning",
+        ],
         cwd=str(BASE_DIR),
         env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
 
     screenshot_dir = resolve_screenshot_dir(tmp_path)
@@ -85,6 +96,14 @@ def test_real_browser_desktop_and_mobile_light_dark_zero_errors(isolated_db, tmp
             page.wait_for_selector("#dash-heading")
             assert page.get_attribute("html", "data-theme") == "light"
             assert "0.00" in page.locator(".score-big").first.text_content()
+            assert page.is_visible("#dash-grammar-card")
+            assert page.is_visible("#quick-guide-card")
+            assert page.locator(".topic-grid .topic-card").count() == 12
+            # Toggle quick-start guide collapse/expand cleanly
+            page.click("#btn-toggle-quick-guide")
+            assert page.locator("#quick-guide-card .guide-steps-grid").count() == 0
+            page.click("#btn-toggle-quick-guide")
+            assert page.is_visible("#btn-guide-open-grammar")
             overflow_desktop = page.evaluate("document.documentElement.scrollWidth > window.innerWidth")
             assert overflow_desktop is False
             page.screenshot(path=str(screenshot_dir / "desktop_light.png"), full_page=False)
@@ -127,18 +146,39 @@ def test_real_browser_desktop_and_mobile_light_dark_zero_errors(isolated_db, tmp
             assert not page.is_disabled("#btn-submit-study")
             page.click("#btn-submit-study")
             page.wait_for_selector("#btn-next-study")
+            # Post-submit Grammar Anatomy & Modal inspection (preserves current study progress)
+            page.wait_for_selector(".grammar-breakdown-box")
+            assert "Giải phẫu Ngữ pháp" in page.locator(".grammar-breakdown-box").text_content()
+            page.locator(".grammar-breakdown-box .grammar-chip-btn").first.click()
+            page.wait_for_selector("#grammar-modal .grammar-lesson-block")
+            assert page.is_visible("#grammar-modal")
+            page.keyboard.press("Escape")
+            assert page.is_hidden("#grammar-modal-backdrop")
+            assert page.is_visible("#btn-next-study")
             page.screenshot(path=str(screenshot_dir / "study_star_4slot.png"), full_page=False)
 
             # 7. Interactive Dokkai Evidence-First (MU-11) & Space shortcut after mouse click
             page.select_option("#study-unit-sel", "MU-11")
             page.select_option("#study-mode-sel", "variant")
             page.wait_for_selector(".dokkai-split")
+            # Zero-leakage: no grammar breakdown before submitting
+            assert page.locator(".grammar-breakdown-box").count() == 0
             page.locator(".passage-sentence.selectable").first.click()
             page.locator(".options-list .option-btn").first.click()
             assert not page.is_disabled("#btn-submit-study")
             page.keyboard.press("Space")
             page.wait_for_selector("#btn-next-study")
             page.screenshot(path=str(screenshot_dir / "study_dokkai_evidence.png"), full_page=False)
+
+            # Jump directly from Study Grammar Modal -> Grammar Drill BEFORE opening Ngữ pháp tab
+            page.locator(".grammar-breakdown-box .grammar-chip-btn").first.click()
+            page.wait_for_selector("#grammar-modal .btn-practice-grammar")
+            page.locator("#grammar-modal .btn-practice-grammar").click()
+            page.wait_for_selector("#grammar-overview-strip .grammar-stat-box")
+            assert page.locator("#grammar-overview-strip .grammar-stat-box").count() == 4
+            page.wait_for_selector("#grammar-drill-stage .grammar-drill-opt-btn")
+            page.click("#btn-clear-grammar-filter")
+            page.wait_for_selector("#grammar-drill-stage .grammar-drill-opt-btn")
 
             # 8. Exam Mode (Phòng thi Thực chiến) full UI walkthrough including any 4-slot ★ item
             page.click('.nav-btn[data-view="exam"]')
@@ -234,8 +274,71 @@ def test_real_browser_desktop_and_mobile_light_dark_zero_errors(isolated_db, tmp
             page.wait_for_selector("#dash-heading")
             assert "165" in page.locator("#dash-heading").locator("..").text_content()
 
-            # 11. Mobile Viewport (390x844) Light & Dark zero horizontal overflow
+            # 11. Ngữ pháp & JLPT tab: Library filters, 3D lesson, Grammar Drill, Foundation Vocab, JLPT Expansion
+            page.click('.nav-btn[data-view="grammar"]')
+            page.wait_for_selector("#grammar-heading")
+            page.click('.subnav-btn[data-grammar-tab="library"]')
+            page.wait_for_selector("#grammar-library-results .grammar-point-card")
+
+            page.select_option("#grammar-scope-sel", "exam")
+            page.wait_for_function(
+                "() => { const c = document.querySelectorAll('#grammar-library-results .grammar-point-card'); return c.length > 0 && Array.from(c).every(el => el.textContent.includes('[THI CUỐI KÌ]')); }"
+            )
+            page.select_option("#grammar-scope-sel", "jlpt")
+            page.wait_for_function(
+                "() => { const c = document.querySelectorAll('#grammar-library-results .grammar-point-card'); return c.length > 0 && Array.from(c).every(el => el.textContent.includes('[MỞ RỘNG JLPT]')); }"
+            )
+            page.select_option("#grammar-scope-sel", "all")
+
+            for lvl in ("N5", "N4", "N3", "N2"):
+                page.select_option("#grammar-level-sel", lvl)
+                page.wait_for_function(
+                    f"() => {{ const c = document.querySelectorAll('#grammar-library-results .grammar-point-card'); return c.length > 0 && Array.from(c).every(el => el.textContent.includes('[{lvl}]')); }}"
+                )
+            page.select_option("#grammar-level-sel", "ALL")
+            page.wait_for_function(
+                "() => document.querySelectorAll('#grammar-library-results .grammar-point-card').length >= 100"
+            )
+
+            # Open 3D grammar lesson detail
+            page.locator("#grammar-library-results .grammar-point-card").first.click()
+            page.wait_for_selector("#grammar-detail-panel .grammar-lesson-block")
+            detail_txt = page.locator("#grammar-detail-panel").text_content()
+            assert "Công thức chia thể" in detail_txt
+            assert "Bản chất ngữ nghĩa" in detail_txt
+            page.screenshot(path=str(screenshot_dir / "grammar_library.png"), full_page=False)
+
+            # Grammar Drill subtab: zero diagnostic leak before submit, keyboard 1 + Space, 4 diagnostics after submit
+            page.click('.subnav-btn[data-grammar-tab="drill"]')
+            page.wait_for_selector("#grammar-drill-stage .grammar-drill-opt-btn")
+            assert page.locator("#grammar-drill-stage .diagnostic-list").count() == 0
+            page.keyboard.press("1")
+            assert not page.is_disabled("#btn-submit-grammar-drill")
+            page.keyboard.press("Space")
+            page.wait_for_selector("#btn-next-grammar-drill")
+            assert page.locator("#grammar-drill-stage .diagnostic-item").count() == 4
+            page.screenshot(path=str(screenshot_dir / "grammar_drill.png"), full_page=False)
+
+            # Foundation Vocab subtab
+            page.click('.subnav-btn[data-grammar-tab="vocab"]')
+            page.wait_for_selector("#vocab-results-container table.data-table tbody tr")
+            assert page.locator("#vocab-results-container table.data-table tbody tr").count() >= 10
+
+            # JLPT Expansion subtab
+            page.click('.subnav-btn[data-grammar-tab="jlpt"]')
+            page.wait_for_selector("#jlpt-levels-table tbody tr")
+            assert page.locator("#jlpt-levels-table tbody tr").count() >= 4
+
+            # 12. Mobile Viewport (390x844) Light & Dark zero horizontal overflow (Dashboard + Grammar tabs)
             page.set_viewport_size({"width": 390, "height": 844})
+            assert page.evaluate("document.documentElement.scrollWidth > window.innerWidth") is False
+            page.click('.subnav-btn[data-grammar-tab="library"]')
+            page.wait_for_selector("#grammar-library-results .grammar-point-card")
+            assert page.evaluate("document.documentElement.scrollWidth > window.innerWidth") is False
+            page.click('.subnav-btn[data-grammar-tab="vocab"]')
+            page.wait_for_selector("#vocab-results-container table.data-table tbody tr")
+            assert page.evaluate("document.documentElement.scrollWidth > window.innerWidth") is False
+
             page.click('.nav-btn[data-view="dashboard"]')
             page.wait_for_selector("#dash-heading")
             overflow_mobile_light = page.evaluate("document.documentElement.scrollWidth > window.innerWidth")
@@ -247,6 +350,10 @@ def test_real_browser_desktop_and_mobile_light_dark_zero_errors(isolated_db, tmp
             overflow_mobile_dark = page.evaluate("document.documentElement.scrollWidth > window.innerWidth")
             assert overflow_mobile_dark is False
             page.screenshot(path=str(screenshot_dir / "mobile_dark.png"), full_page=False)
+
+            page.click('.nav-btn[data-view="grammar"]')
+            page.wait_for_selector("#grammar-heading")
+            assert page.evaluate("document.documentElement.scrollWidth > window.innerWidth") is False
 
             browser.close()
 

@@ -27,10 +27,22 @@ from n3_mastery.fsrs_adaptive import (
     get_pace_settings,
     update_pace_settings,
 )
+from n3_mastery.grammar_engine import (
+    get_grammar_categories,
+    get_grammar_overview,
+    get_grammar_point_detail,
+    get_next_grammar_drill,
+    import_jlpt_grammar_pack,
+    list_grammar_points,
+    list_vocab_foundation,
+    seed_grammar_and_foundation,
+    submit_grammar_drill,
+)
 from n3_mastery.importer import import_all_excel, import_excel_file
 from n3_mastery.models import (
     BridgeCompleteRequest,
     ExamSubmitRequest,
+    GrammarDrillSubmitRequest,
     PaceSettings,
     RatingOverrideRequest,
     SessionHintRequest,
@@ -49,10 +61,14 @@ async def lifespan(app: FastAPI):
     conn = get_connection()
     try:
         q_count = conn.execute("SELECT COUNT(*) FROM QUESTIONS").fetchone()[0]
+        gp_count = conn.execute("SELECT COUNT(*) FROM GRAMMAR_POINTS").fetchone()[0]
+        qa_count = conn.execute("SELECT COUNT(*) FROM QUESTION_GRAMMAR_ANALYSES").fetchone()[0]
     finally:
         conn.close()
     if q_count == 0 and get_excel_dir().exists():
         import_all_excel(generate_variants=True)
+    elif gp_count == 0 or qa_count < q_count:
+        seed_grammar_and_foundation()
     yield
 
 
@@ -151,6 +167,10 @@ def get_health() -> Dict[str, Any]:
         v_cnt = conn.execute("SELECT COUNT(*) FROM VARIANT_DRILLS").fetchone()[0]
         p_cnt = conn.execute("SELECT COUNT(*) FROM PASSAGES WHERE section='reading'").fetchone()[0]
         u_cnt = conn.execute("SELECT COUNT(*) FROM MICRO_UNITS").fetchone()[0]
+        gp_cnt = conn.execute("SELECT COUNT(*) FROM GRAMMAR_POINTS").fetchone()[0]
+        gd_cnt = conn.execute("SELECT COUNT(*) FROM GRAMMAR_DRILLS").fetchone()[0]
+        qga_cnt = conn.execute("SELECT COUNT(*) FROM QUESTION_GRAMMAR_ANALYSES").fetchone()[0]
+        vf_cnt = conn.execute("SELECT COUNT(*) FROM VOCAB_FOUNDATION").fetchone()[0]
     finally:
         conn.close()
     return {
@@ -161,6 +181,10 @@ def get_health() -> Dict[str, Any]:
         "total_variants": int(v_cnt),
         "dokkai_passages": int(p_cnt),
         "micro_units": int(u_cnt),
+        "grammar_points": int(gp_cnt),
+        "grammar_drills": int(gd_cnt),
+        "question_grammar_analyses": int(qga_cnt),
+        "vocab_foundation": int(vf_cnt),
     }
 
 
@@ -176,6 +200,7 @@ def get_dashboard() -> Dict[str, Any]:
     settings = get_pace_settings()
     units = _get_units_overview()
     errors = get_error_notebook(limit=50)
+    grammar_summary = get_grammar_overview()
     conn = get_connection()
     try:
         wb_cnt = conn.execute("SELECT COUNT(*) FROM SOURCE_WORKBOOKS").fetchone()[0]
@@ -192,6 +217,7 @@ def get_dashboard() -> Dict[str, Any]:
         "error_count": len(errors),
         "workbooks_count": int(wb_cnt),
         "recent_exams": [dict(r) for r in exams],
+        "grammar_summary": grammar_summary,
     }
 
 
@@ -591,3 +617,115 @@ async def upload_excel_workbook(file: UploadFile = File(...)) -> Dict[str, Any]:
         "health": get_health(),
         "readiness": calculate_dual_readiness().model_dump(),
     }
+
+
+@app.get("/api/grammar/overview")
+def get_grammar_overview_api() -> Dict[str, Any]:
+    return get_grammar_overview()
+
+
+@app.get("/api/grammar/points")
+def list_grammar_points_api(
+    scope: str = Query("all", pattern="^(all|exam|jlpt)$"),
+    level: Optional[str] = None,
+    category: Optional[str] = None,
+    state: Optional[str] = None,
+    q: Optional[str] = None,
+) -> Dict[str, Any]:
+    points = list_grammar_points(
+        scope=scope,
+        level=level,
+        category=category,
+        state=state,
+        q=q,
+    )
+    return {
+        "total": len(points),
+        "points": points,
+        "categories": get_grammar_categories(),
+    }
+
+
+@app.get("/api/grammar/points/{code}")
+def get_grammar_point_detail_api(code: str) -> Dict[str, Any]:
+    detail = get_grammar_point_detail(code)
+    if detail is None:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy điểm ngữ pháp '{code}'")
+    return detail
+
+
+@app.get("/api/grammar/drill/next")
+def get_next_grammar_drill_api(
+    drill_type: str = Query("mixed", pattern="^(mixed|formation|contrast|application)$"),
+    scope: str = Query("all", pattern="^(all|exam|jlpt)$"),
+    level: Optional[str] = None,
+    grammar_code: Optional[str] = None,
+    session_seed: Optional[str] = None,
+) -> Dict[str, Any]:
+    seed = session_seed or secrets.token_hex(4)
+    try:
+        drill = get_next_grammar_drill(
+            drill_type=drill_type,
+            scope=scope,
+            level=level,
+            grammar_code=grammar_code,
+            session_seed=seed,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if drill is None:
+        return {
+            "drill": None,
+            "empty": True,
+            "reason": "Không tìm thấy bài luyện ngữ pháp phù hợp bộ lọc hiện tại.",
+        }
+    return {"drill": drill, "empty": False}
+
+
+@app.post("/api/grammar/drill/submit")
+def submit_grammar_drill_api(req: GrammarDrillSubmitRequest) -> Dict[str, Any]:
+    try:
+        res = submit_grammar_drill(
+            drill_id=req.drill_id,
+            selected_index=req.selected_index,
+            response_sec=req.response_sec,
+            session_seed=req.session_seed,
+        )
+    except ValueError as exc:
+        msg = str(exc)
+        status = 404 if "Không tìm thấy" in msg else 400
+        raise HTTPException(status_code=status, detail=msg)
+    res["overview"] = get_grammar_overview()
+    return res
+
+
+@app.post("/api/grammar/import")
+async def import_grammar_pack_api(file: UploadFile = File(...)) -> Dict[str, Any]:
+    filename = file.filename or "grammar_pack.json"
+    lower_name = filename.lower()
+    if not lower_name.endswith((".json", ".xlsx")):
+        raise HTTPException(status_code=400, detail="Chỉ hỗ trợ tệp định dạng .json hoặc .xlsx")
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Tệp tải lên rỗng.")
+
+    try:
+        res = import_jlpt_grammar_pack(content, filename=filename)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Lỗi nạp gói ngữ pháp: {exc}")
+
+    res["overview"] = get_grammar_overview()
+    res["health"] = get_health()
+    return res
+
+
+@app.get("/api/foundation/vocab")
+def list_vocab_foundation_api(
+    scope: str = Query("all", pattern="^(all|exam|curated|jlpt)$"),
+    level: Optional[str] = None,
+    q: Optional[str] = None,
+    limit: int = Query(200, ge=1, le=500),
+) -> Dict[str, Any]:
+    items = list_vocab_foundation(scope=scope, level=level, q=q, limit=limit)
+    return {"total": len(items), "items": items}

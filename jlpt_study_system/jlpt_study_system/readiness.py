@@ -19,7 +19,7 @@ from jlpt_study_system.models import (
 
 def calculate_sectional_readiness(db_path=None) -> ReadinessReport:
     """Calculate projected scores for Language Knowledge, Reading, and Listening.
-
+    
     Evaluates real performance against JLPT N3 passing thresholds:
     - Language Knowledge: >= 19/60 cutoff
     - Reading: >= 19/60 cutoff
@@ -38,7 +38,7 @@ def calculate_sectional_readiness(db_path=None) -> ReadinessReport:
         # Reviews accuracy
         review_acc_row = conn.execute(
             """
-            SELECT
+            SELECT 
                 COUNT(*) AS total,
                 SUM(CASE WHEN rating >= 3 THEN 1 ELSE 0 END) AS good_easy
             FROM review_logs
@@ -73,7 +73,7 @@ def calculate_sectional_readiness(db_path=None) -> ReadinessReport:
         # 2. Dokkai reading drill metrics
         dokkai_row = conn.execute(
             """
-            SELECT
+            SELECT 
                 COUNT(*) AS total,
                 SUM(h.is_correct) AS correct
             FROM drill_history h
@@ -88,7 +88,7 @@ def calculate_sectional_readiness(db_path=None) -> ReadinessReport:
         # 3. Choukai listening drill metrics
         choukai_row = conn.execute(
             """
-            SELECT
+            SELECT 
                 COUNT(*) AS total,
                 SUM(h.is_correct) AS correct,
                 AVG(h.response_time_sec) AS avg_speed

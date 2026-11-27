@@ -180,7 +180,7 @@ def get_error_notebook_stats(db_path=None) -> Dict[str, Any]:
         total = conn.execute("SELECT COUNT(*) AS c FROM error_notebook").fetchone()["c"]
         unresolved = conn.execute("SELECT COUNT(*) AS c FROM error_notebook WHERE remediated = 0").fetchone()["c"]
         remediated = conn.execute("SELECT COUNT(*) AS c FROM error_notebook WHERE remediated = 1").fetchone()["c"]
-
+        
         breakdown = conn.execute(
             """
             SELECT item_type, COUNT(*) AS count
@@ -201,7 +201,7 @@ def get_error_notebook_stats(db_path=None) -> Dict[str, Any]:
         ).fetchall()
 
     breakdown_dict = {r["item_type"]: r["count"] for r in breakdown}
-
+    
     return {
         "total_errors_logged": total,
         "unresolved_errors": unresolved,
